@@ -1,10 +1,9 @@
+import { HttpStatusCodes, type HttpStatusCode } from "@the_application_name/common";
 import type { Context } from "hono";
 import type { HTTPResponseError } from "hono/types";
-import { HttpStatusCodes, type HttpStatusCode } from "@the_application_name/common";
 import { serializeError } from "serialize-error";
-import type { Logger } from "./Logger";
 import { getHttpErrorMetadata } from "./HttpErrorMetadata";
-
+import type { Logger } from "./Logger";
 
 export const honoJsErrorHandler = (logger: Logger, errorHandlers: ErrorHandlerEntries = []) => {
   return (error: Error | HTTPResponseError, c: Context) => {

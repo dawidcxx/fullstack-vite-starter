@@ -1,7 +1,7 @@
-import { invariant } from "@the_application_name/common";
-import { createMiddleware } from "hono/factory";
 import { existsSync, readdirSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
+import { invariant } from "@the_application_name/common";
+import { createMiddleware } from "hono/factory";
 
 export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
   invariant(
@@ -31,12 +31,16 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") return next();
 
     const filePath = assetLookupMap.get(ctx.req.path);
-   
+
     if (filePath) {
       return new Response(Bun.file(filePath));
     }
 
-    if (ctx.req.path.endsWith('.js') || ctx.req.path.endsWith('.css') || ctx.req.path.endsWith('.map')) {
+    if (
+      ctx.req.path.endsWith(".js") ||
+      ctx.req.path.endsWith(".css") ||
+      ctx.req.path.endsWith(".map")
+    ) {
       return ctx.text("Not Found", 404);
     }
 

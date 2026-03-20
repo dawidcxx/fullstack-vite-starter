@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc --emitDeclarationOnly && bun run build.ts",
     "clean": "rm -rf dist",
@@ -20,7 +20,9 @@
     "types:watch": "tsc --emitDeclarationOnly --watch",
     "dev": "bun run build:watch & bun run types:watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "valibot": "^1.2.0"
+  },
   "devDependencies": {
     "@types/bun": "^1.3.7",
     "typescript": "^5.9.3"

@@ -11,9 +11,12 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "@the_application_name/common": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "tailwindcss": "^4.2.2"
+    "swr": "^2.4.1",
+    "tailwindcss": "^4.2.2",
+    "valibot": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
