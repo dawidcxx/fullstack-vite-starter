@@ -1,0 +1,28 @@
+{
+  "name": "@the_application_name/common",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --emitDeclarationOnly && bun run build.ts",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit -p ./tsconfig.json",
+    "bundle:watch": "bun run build.ts --watch",
+    "types:watch": "tsc --emitDeclarationOnly --watch",
+    "dev": "bun run build:watch & bun run types:watch"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.3.7",
+    "typescript": "^5.9.3"
+  }
+}

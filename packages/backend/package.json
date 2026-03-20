@@ -1,0 +1,25 @@
+{
+  "name": "@the_application_name/backend",
+  "private": true,
+  "type": "module",
+  "module": "src/main.ts",
+  "scripts": {
+    "dev": " bun --sql-preconnect --watch --env-file=./.env.local run ./src/main.ts",
+    "build": "bun run ./build.ts",
+    "typecheck": "tsc --noEmit -p ./tsconfig.json"
+  },
+  "dependencies": {
+    "@needle-di/core": "^1.1.0",
+    "@the_application_name/common": "workspace:*",
+    "date-fns": "^4.1.0",
+    "hono": "^4.11.4",
+    "serialize-error": "^13.0.1",
+    "valibot": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
