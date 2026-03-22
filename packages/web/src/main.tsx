@@ -1,6 +1,5 @@
 import { createFetchClient, todosContract, type Todo } from "@the_application_name/common";
-import { StrictMode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 
@@ -10,7 +9,7 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
-const todosClient = createFetchClient(todosContract, { baseUrl: '/api' })
+const todosClient = createFetchClient(todosContract, { baseUrl: "/api" });
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);

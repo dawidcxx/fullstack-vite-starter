@@ -2,7 +2,6 @@ import { inject, injectable } from "@needle-di/core";
 import {
   HttpStatusCodes,
   TodoIdParamsSchema,
-  TodoSchema,
   CreateTodoInputSchema,
   todosContract,
 } from "@the_application_name/common";
@@ -17,25 +16,21 @@ export class TodosApi {
   build() {
     const router = new Hono();
 
-    router.get(todosContract.list.path, (c) => {
-      return c.json({ todos: this.todosService.getAll() }, HttpStatusCodes.OK);
+    router.get(todosContract.list.path, async (c) => {
+      return c.json(await this.todosService.getAll(), HttpStatusCodes.OK);
     });
 
     router.post(todosContract.create.path, async (c) => {
       const rawBody = await c.req.json();
-      const body = v.parse(CreateTodoInputSchema, rawBody);
-
-      const created = this.todosService.create(body);
-      const responseBody = v.parse(TodoSchema, created);
-
-      return c.json(responseBody, HttpStatusCodes.CREATED);
+      const createReq = v.parse(CreateTodoInputSchema, rawBody);
+      const created = await this.todosService.create(createReq);
+      return c.json(created, HttpStatusCodes.CREATED);
     });
 
-    router.patch(todosContract.toggle.path, (c) => {
+    router.patch(todosContract.toggle.path, async (c) => {
       const params = v.parse(TodoIdParamsSchema, c.req.param());
-      const updated = this.todosService.update(params.id);
-      const responseBody = v.parse(TodoSchema, updated);
-      return c.json(responseBody, HttpStatusCodes.OK);
+      const updated = await this.todosService.update(params.id);
+      return c.json(updated, HttpStatusCodes.OK);
     });
 
     return router;

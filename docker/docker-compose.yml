@@ -2,8 +2,8 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: the_application_name
-      POSTGRES_PASSWORD: the_application_name
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
       POSTGRES_DB: the_application_name
     ports:
       - "5432:5432"
@@ -14,6 +14,7 @@ services:
     image: adminer:latest
     environment:
       ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: flat
     ports:
       - "6664:8080"
     depends_on:
@@ -24,7 +25,7 @@ services:
     profiles:
       - full
     environment:
-      POSTGRES_URL: postgresql://the_application_name:the_application_name@db:5432/the_application_name
+      POSTGRES_URL: postgresql://app:app@db:5432/the_application_name
     ports:
       - "6663:7001"
     depends_on:

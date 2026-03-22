@@ -1,59 +1,51 @@
-import { injectable } from "@needle-di/core";
-import type { CreateTodoInput, Todo } from "@the_application_name/common";
+import { inject, injectable } from "@needle-di/core";
+import {
+  assertNotNull,
+  type CreateTodoInput,
+  type Todo,
+  type TodoListResponse,
+} from "@the_application_name/common";
+import { eq, sql } from "drizzle-orm";
+import { BunSQLDatabase } from "drizzle-orm/bun-sql";
 import { TodoNotFoundError } from "./todosErrors";
+import { todosTable } from "./todosTable";
 
 @injectable()
 export class TodosService {
-  private readonly store: TodoStore;
+  constructor(private readonly db: BunSQLDatabase = inject(BunSQLDatabase)) {}
 
-  constructor() {
-    this.store = new TodoStore();
+  async getAll(): Promise<TodoListResponse> {
+    const dbTodos = await this.db.select().from(todosTable);
+    return {
+      todos: dbTodos.map(mapDbTodo),
+    };
   }
 
-  getAll(): Todo[] {
-    return this.store.list();
+  async create(input: CreateTodoInput): Promise<Todo> {
+    const inserted = await this.db.insert(todosTable).values({ title: input.title }).returning();
+    assertNotNull(inserted[0], "inserted[0]");
+    return mapDbTodo(inserted[0]);
   }
 
-  create(input: CreateTodoInput): Todo {
-    return this.store.create(input);
-  }
-
-  update(id: string): Todo {
-    const updated = this.store.toggle(id);
-    if (!updated) {
+  async update(id: string): Promise<Todo> {
+    const updated = await this.db
+      .update(todosTable)
+      .set({ completed: sql`NOT ${todosTable.completed}` })
+      .where(eq(todosTable.id, id))
+      .returning();
+    if (updated.length === 0) {
       throw new TodoNotFoundError(`Todo '${id}' not found`);
     }
-
-    return updated;
+    assertNotNull(updated[0], "updated[0]");
+    return mapDbTodo(updated[0]);
   }
 }
 
-class TodoStore {
-  private todos: Todo[] = [];
-
-  list(): Todo[] {
-    return [...this.todos];
-  }
-
-  create(input: CreateTodoInput): Todo {
-    const todo: Todo = {
-      id: crypto.randomUUID(),
-      title: input.title,
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    this.todos.unshift(todo);
-    return todo;
-  }
-
-  toggle(id: string): Todo | null {
-    const todo = this.todos.find((item) => item.id === id);
-    if (!todo) {
-      return null;
-    }
-
-    todo.completed = !todo.completed;
-    return todo;
-  }
+function mapDbTodo(row: typeof todosTable.$inferSelect): Todo {
+  return {
+    completed: row.completed,
+    createdAt: row.createdAt.toISOString(),
+    id: row.id,
+    title: row.title,
+  };
 }

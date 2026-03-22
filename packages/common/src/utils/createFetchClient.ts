@@ -27,9 +27,9 @@ export function createFetchClient<TContract extends FetchContract>(
         ...(body === undefined
           ? {}
           : {
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(body),
-          }),
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(body),
+            }),
       });
 
       await ensureOk(response);
@@ -50,18 +50,19 @@ type Route = {
 
 type FetchContract = Record<string, Route>;
 
-type RouteArgs<TRoute extends Route> =
-  (TRoute extends { params: infer TParams extends v.GenericSchema }
-    ? { params: v.InferInput<TParams> }
-    : {}) &
+type RouteArgs<TRoute extends Route> = (TRoute extends {
+  params: infer TParams extends v.GenericSchema;
+}
+  ? { params: v.InferInput<TParams> }
+  : {}) &
   (TRoute extends { request: infer TRequest extends v.GenericSchema }
     ? { body: v.InferInput<TRequest> }
     : {});
 
 type FetchClient<TContract extends FetchContract> = {
   [TKey in keyof TContract]: keyof RouteArgs<TContract[TKey]> extends never
-  ? () => Promise<v.InferOutput<TContract[TKey]["response"]>>
-  : (args: RouteArgs<TContract[TKey]>) => Promise<v.InferOutput<TContract[TKey]["response"]>>;
+    ? () => Promise<v.InferOutput<TContract[TKey]["response"]>>
+    : (args: RouteArgs<TContract[TKey]>) => Promise<v.InferOutput<TContract[TKey]["response"]>>;
 };
 
 function interpolatePath(
