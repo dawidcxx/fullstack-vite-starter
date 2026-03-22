@@ -29,7 +29,7 @@ Opinionated template on how to start a Vite + Bun backend project. Optimized for
 
 ## Project Structure
 
-This template uses a monorepo setup with npm workspaces:
+This template uses a monorepo setup with bun workspaces:
 
 - `packages/backend/`: Bun + Hono.js API server with Drizzle ORM, migrations, and example todos feature
 - `packages/common/`: Shared TypeScript utilities, DTOs, and Valibot schemas for API contracts
