@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit -p ./tsconfig.json"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.4.1",
+    "@electric-sql/pglite-socket": "^0.1.1",
     "@needle-di/core": "^1.1.0",
     "@the_application_name/common": "workspace:*",
     "date-fns": "^4.1.0",

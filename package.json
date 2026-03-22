@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "bun run build:common && bun run dev:backend & bun run dev:web & bun run dev:common",
-    "typecheck": "bun run build:common && bun --filter '*' typecheck",
+    "typecheck": "bun --filter '*' typecheck",
     "dev:backend": "bun --filter @the_application_name/backend dev",
     "dev:web": "bun --filter @the_application_name/web dev",
     "dev:common": "bun --filter @the_application_name/common dev",

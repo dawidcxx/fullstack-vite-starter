@@ -1,21 +1,15 @@
 import { inject, injectable } from "@needle-di/core";
-import { assertNotNull } from "@the_application_name/common";
 import { SQL } from "bun";
 import { Logger } from "@/lib/Logger";
-import { Config } from "../Config";
 import { dbMigrations } from "./migrations";
 
 @injectable()
 export class Migrator {
-  constructor(
-    private readonly config: Config = inject(Config),
-    private readonly sql: SQL = inject(SQL),
-  ) {}
+  constructor(private readonly sql: SQL = inject(SQL)) {}
 
   async up(): Promise<void> {
     const startedAt = new Date().getTime();
     logger.info("Running migrations - Starting");
-    assertNotNull(this.config.dbUrl, "Database URL must be provided - failing migrations");
 
     await this.ensureMigrationsTable();
 

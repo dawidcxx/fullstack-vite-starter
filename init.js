@@ -25,9 +25,7 @@ for (const file of files) {
   if (changed) changedFiles += 1;
 }
 
-console.log(
-  `Done. Replaced "${PLACEHOLDER}" with "${newProjectName}" in ${changedFiles} file(s).`,
-);
+console.log(`Done. Replaced "${PLACEHOLDER}" with "${newProjectName}" in ${changedFiles} file(s).`);
 
 // Utils
 

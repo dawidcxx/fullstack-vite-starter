@@ -8,6 +8,8 @@
     "packages/backend": {
       "name": "@the_application_name/backend",
       "dependencies": {
+        "@electric-sql/pglite": "^0.4.1",
+        "@electric-sql/pglite-socket": "^0.1.1",
         "@needle-di/core": "^1.1.0",
         "@the_application_name/common": "workspace:*",
         "date-fns": "^4.1.0",
@@ -58,6 +60,10 @@
     },
   },
   "packages": {
+    "@electric-sql/pglite": ["@electric-sql/pglite@0.4.1", "", {}, "sha512-mZ9NzzUSYPOCnxHH1oAHPRzoMFJHY472raDKwXl/+6oPbpdJ7g8LsCN4FSaIIfkiCKHhb3iF/Zqo3NYxaIhU7Q=="],
+
+    "@electric-sql/pglite-socket": ["@electric-sql/pglite-socket@0.1.1", "", { "peerDependencies": { "@electric-sql/pglite": "0.4.1" }, "bin": { "pglite-server": "dist/scripts/server.js" } }, "sha512-p2hoXw3Z3LQHwTeikdZNsFBOvXGqKY2hk51BBw+8NKND8eoH+8LFOtW9Z8CQKmTJ2qqGYu82ipqiyFZOTTXNfw=="],
+
     "@emnapi/core": ["@emnapi/core@1.9.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.0", "tslib": "^2.4.0" } }, "sha512-mukuNALVsoix/w1BJwFzwXBN/dHeejQtuVzcDsfOEsdpCumXb/E9j8w11h5S54tT1xhifGfbbSm/ICrObRb3KA=="],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.9.1", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-VYi5+ZVLhpgK4hQ0TAjiQiZ6ol0oe4mBx7mVv7IflsiEp0OWoVsp/+f9Vc1hOhE0TtkORVrI1GvzyreqpgWtkA=="],
