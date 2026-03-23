@@ -15,7 +15,7 @@ try {
 }
 
 const httpServer = container.get(HttpServer);
-httpServer.start({ host: "localhost", port: process.env.PORT || 3000 });
+httpServer.start({ host: "0.0.0.0", port: process.env.PORT || 3000 });
 
 function handleShutdown(signal: NodeJS.Signals) {
   logger.info("Shutdown signal retrieved", { signal });

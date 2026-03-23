@@ -6,6 +6,9 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: the_application_name
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d the_application_name"]
+      interval: 2s
     ports:
       - "5432:5432"
     volumes:
