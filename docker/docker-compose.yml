@@ -1,3 +1,4 @@
+name: the_application_name
 services:
   db:
     image: postgres:17-alpine
