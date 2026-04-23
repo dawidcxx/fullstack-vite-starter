@@ -14,5 +14,8 @@
     "build:backend": "bun --filter @the_application_name/backend build",
     "build:web": "bun --filter @the_application_name/web build",
     "build:common": "bun --filter @the_application_name/common build"
+  },
+  "overrides": {
+    "typescript": "npm:@typescript/native-preview@beta"
   }
 }

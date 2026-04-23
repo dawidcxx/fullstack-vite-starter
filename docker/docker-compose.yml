@@ -3,14 +3,14 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_USER: the_application_name
+      POSTGRES_PASSWORD: the_application_name
       POSTGRES_DB: the_application_name
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d the_application_name"]
       interval: 2s
     ports:
-      - "5432:5432"
+      - "6661:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -29,7 +29,7 @@ services:
     profiles:
       - full
     environment:
-      POSTGRES_URL: postgresql://app:app@db:5432/the_application_name
+      POSTGRES_URL: postgresql://the_application_name:the_application_name@db:6661/the_application_name
     ports:
       - "6663:7001"
     depends_on:
