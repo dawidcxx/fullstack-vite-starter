@@ -15,12 +15,12 @@ describe("ScoreService integration test suite", () => {
 
   it("Should not fail while basic todos API operations", async () => {
     const todosService = ctx.container.get(TodosService);
-    const createdTodo = await todosService.create({ title: "Hello world!1" });
+    const createdTodo = await todosService.create({ content: "Hello world!1" });
     expect(createdTodo.completed).toEqual(false);
 
-    const { todos } = await todosService.getAll();
+    const todos = await todosService.getAll();
     expect(todos.length).toBeGreaterThanOrEqual(1);
-    const toggledTodo = await todosService.update(createdTodo.id);
+    const toggledTodo = await todosService.update({ id: createdTodo.id });
     expect(toggledTodo.completed).toEqual(true);
   });
 });
