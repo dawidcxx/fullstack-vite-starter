@@ -1,13 +1,14 @@
-import * as v from "valibot";
+import { GenericSchema, InferOutput, parse as vParse } from "valibot";
 
-export type CreateFetchClientOptions = {
+export type CreateFetchClientOptions<TContract extends FetchContract = FetchContract> = {
   baseUrl?: string;
   fetch?: typeof globalThis.fetch;
+  overrides?: RouteOverrides<TContract>;
 };
 
 export function createFetchClient<TContract extends FetchContract>(
   contract: TContract,
-  options: CreateFetchClientOptions = {},
+  options: CreateFetchClientOptions<TContract> = {},
 ): FetchClient<TContract> {
   const fetchFn = options.fetch ?? globalThis.fetch;
   const baseUrl = options.baseUrl ?? "";
@@ -16,13 +17,32 @@ export function createFetchClient<TContract extends FetchContract>(
 
   for (const key of Object.keys(contract) as Array<keyof TContract>) {
     const route = contract[key];
+    const override = options.overrides?.[key] as RouteMethod<TContract[typeof key]> | undefined;
 
-    client[key] = async (args?: { params?: unknown; body?: unknown }) => {
-      const params = route.params ? v.parse(route.params, args?.params) : undefined;
-      const body = route.request ? v.parse(route.request, args?.body) : undefined;
+    client[key] = async (args?: ClientRequestArgs) => {
+      const params = route.params ? vParse(route.params, args?.params) : undefined;
+      const query = route.query ? vParse(route.query, args?.query) : undefined;
+      const body = route.request ? vParse(route.request, args?.body) : undefined;
+
+      if (override) {
+        const result = await invokeOverride(override, buildRouteArgs(route, params, query, body));
+        return vParse(route.response, result);
+      }
+
       const path = interpolatePath(route.path, params as Record<string, unknown> | undefined);
 
-      const response = await fetchFn(`${baseUrl}${path}`, {
+      const searchParams = new URLSearchParams();
+      if (query) {
+        for (const [k, val] of Object.entries(query as Record<string, unknown>)) {
+          if (val !== undefined && val !== null) {
+            searchParams.set(k, String(val));
+          }
+        }
+      }
+      const queryString = searchParams.toString();
+      const finalUrl = `${baseUrl}${path}${queryString ? "?" + queryString : ""}`;
+
+      const response = await fetchFn(finalUrl, {
         method: route.method,
         ...(body === undefined
           ? {}
@@ -33,7 +53,8 @@ export function createFetchClient<TContract extends FetchContract>(
       });
 
       await ensureOk(response);
-      return v.parse(route.response, await response.json());
+      const responseBodyAsJson = await response.json();
+      return vParse(route.response, responseBodyAsJson);
     };
   }
 
@@ -43,27 +64,43 @@ export function createFetchClient<TContract extends FetchContract>(
 type Route = {
   method: string;
   path: string;
-  response: v.GenericSchema;
-  request?: v.GenericSchema;
-  params?: v.GenericSchema;
+  response: GenericSchema;
+  request?: GenericSchema;
+  params?: GenericSchema;
+  query?: GenericSchema;
 };
 
 type FetchContract = Record<string, Route>;
 
 type RouteArgs<TRoute extends Route> = (TRoute extends {
-  params: infer TParams extends v.GenericSchema;
+  params: infer TParams extends GenericSchema;
 }
-  ? { params: v.InferInput<TParams> }
+  ? { params: InferOutput<TParams> }
   : {}) &
-  (TRoute extends { request: infer TRequest extends v.GenericSchema }
-    ? { body: v.InferInput<TRequest> }
+  (TRoute extends { query: infer TQuery extends GenericSchema }
+    ? { query: InferOutput<TQuery> }
+    : {}) &
+  (TRoute extends { request: infer TRequest extends GenericSchema }
+    ? { body: InferOutput<TRequest> }
     : {});
 
 type FetchClient<TContract extends FetchContract> = {
-  [TKey in keyof TContract]: keyof RouteArgs<TContract[TKey]> extends never
-    ? () => Promise<v.InferOutput<TContract[TKey]["response"]>>
-    : (args: RouteArgs<TContract[TKey]>) => Promise<v.InferOutput<TContract[TKey]["response"]>>;
+  [TKey in keyof TContract]: RouteMethod<TContract[TKey]>;
 };
+
+type RouteOverrides<TContract extends FetchContract> = Partial<{
+  [TKey in keyof TContract]: RouteMethod<TContract[TKey]>;
+}>;
+
+type ClientRequestArgs = {
+  params?: unknown;
+  query?: unknown;
+  body?: unknown;
+};
+
+type RouteMethod<TRoute extends Route> = keyof RouteArgs<TRoute> extends never
+  ? () => Promise<InferOutput<TRoute["response"]>>
+  : (args: RouteArgs<TRoute>) => Promise<InferOutput<TRoute["response"]>>;
 
 function interpolatePath(
   pathTemplate: string,
@@ -82,6 +119,31 @@ function interpolatePath(
 
     return encodeURIComponent(String(value));
   });
+}
+
+function buildRouteArgs(route: Route, params: unknown, query: unknown, body: unknown): unknown {
+  const args: ClientRequestArgs = {};
+
+  if (route.params) {
+    args.params = params;
+  }
+  if (route.query) {
+    args.query = query;
+  }
+  if (route.request) {
+    args.body = body;
+  }
+
+  return Object.keys(args).length === 0 ? undefined : args;
+}
+
+function invokeOverride<TRoute extends Route>(
+  override: RouteMethod<TRoute>,
+  args: unknown,
+): Promise<InferOutput<TRoute["response"]>> {
+  return (override as (args?: RouteArgs<TRoute>) => Promise<InferOutput<TRoute["response"]>>)(
+    args as RouteArgs<TRoute> | undefined,
+  );
 }
 
 async function ensureOk(response: Response): Promise<void> {

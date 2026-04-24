@@ -102,7 +102,7 @@
                 echo "This script must be run from the repository root"
                 exit 1
               fi
-              tool=$(command -v docker || command -v podman)
+              tool=$(command -v podman || command -v docker)
               $tool build . -t the_application_name:local -f ./docker/Dockerfile
             '')
           ];

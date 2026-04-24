@@ -1,8 +1,9 @@
 import { inject, injectable } from "@needle-di/core";
 import {
+  CreateTodoRequest,
   HttpStatusCodes,
-  TodoIdParamsSchema,
-  CreateTodoInputSchema,
+  TodoListResponse,
+  TodoParams,
   todosContract,
 } from "@the_application_name/common";
 import { Hono } from "hono";
@@ -17,19 +18,22 @@ export class TodosApi {
     const router = new Hono();
 
     router.get(todosContract.list.path, async (c) => {
-      return c.json(await this.todosService.getAll(), HttpStatusCodes.OK);
+      const todos = await this.todosService.getAll();
+      const response: TodoListResponse = {
+        todos,
+      };
+      return c.json(response, HttpStatusCodes.OK);
     });
 
     router.post(todosContract.create.path, async (c) => {
-      const rawBody = await c.req.json();
-      const createReq = v.parse(CreateTodoInputSchema, rawBody);
-      const created = await this.todosService.create(createReq);
+      const request = v.parse(CreateTodoRequest, await c.req.json());
+      const created = await this.todosService.create(request);
       return c.json(created, HttpStatusCodes.CREATED);
     });
 
     router.patch(todosContract.toggle.path, async (c) => {
-      const params = v.parse(TodoIdParamsSchema, c.req.param());
-      const updated = await this.todosService.update(params.id);
+      const params = v.parse(TodoParams, c.req.param());
+      const updated = await this.todosService.update(params);
       return c.json(updated, HttpStatusCodes.OK);
     });
 

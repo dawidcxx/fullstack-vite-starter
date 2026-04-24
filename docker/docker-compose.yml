@@ -7,8 +7,10 @@ services:
       POSTGRES_PASSWORD: the_application_name
       POSTGRES_DB: the_application_name
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d the_application_name"]
+      test: ["CMD-SHELL", "pg_isready -U the_application_name -d the_application_name"]
       interval: 2s
+      timeout: 5s
+      retries: 5
     ports:
       - "6661:5432"
     volumes:
@@ -29,9 +31,10 @@ services:
     profiles:
       - full
     environment:
-      POSTGRES_URL: postgresql://the_application_name:the_application_name@db:6661/the_application_name
+      POSTGRES_URL: postgresql://the_application_name:the_application_name@db:5432/the_application_name
+      PORT:
     ports:
-      - "6663:7001"
+      - "6663:8080"
     depends_on:
       - db
 

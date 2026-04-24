@@ -29,9 +29,10 @@ WORKDIR /app
 
 # Backend runtime bundle (includes frontend under ./public when available)
 COPY --from=builder /app/packages/backend/dist ./
-ENV PORT=7001
+ENV PORT=8080
 ENV NODE_ENV=production
+ENV LOG_LEVEL=info
 
-EXPOSE 7001
+EXPOSE 8080
 
 CMD ["bun", "--sql-preconnect", "run", "main.js"]

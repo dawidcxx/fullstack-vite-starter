@@ -1,36 +1,44 @@
 import { resolve } from "path";
 import { inject, injectable } from "@needle-di/core";
-import { assertNotNull, invariant } from "@the_application_name/common";
+import { invariant } from "@the_application_name/common";
 import { Hono } from "hono";
 import { websocket, type BunWebSocketData } from "hono/bun";
 import { TodosApi } from "@/features/todos/TodosApi";
 import { honoJsErrorHandler } from "@/lib/honoJsApiErrorHandler";
 import { Logger } from "@/lib/Logger";
 import { serveStaticAssets } from "@/lib/serveStaticAssets";
+import { Config } from "./Config";
+import type { OnDeinit } from "./OnDeinit";
 
 @injectable()
-export class HttpServer {
+export class HttpServer implements OnDeinit {
   private serverRef: Bun.Server<BunWebSocketData> | null = null;
 
-  constructor(private readonly todosApi = inject(TodosApi)) {}
+  constructor(
+    private readonly config = inject(Config),
+    private readonly todosApi = inject(TodosApi),
+  ) {}
 
-  async start({ host, port }: HttpServerStartArgs): Promise<void> {
-    invariant(this.serverRef === null, "Must not call .start() twice");
+  async init() {
+    invariant(this.serverRef === null, "Must not call .init() twice");
     const app = this.buildRoutes();
 
     this.serverRef = Bun.serve({
-      port,
-      hostname: host,
+      port: this.config.httpPort,
+      hostname: this.config.httpHost,
       fetch: app.fetch,
       websocket: websocket,
     });
 
-    logger.info(`Server running at http://localhost:${port}`, { port });
+    logger.info(`Server running at http://${this.config.httpHost}:${this.config.httpPort}`, {
+      port: this.config.httpPort,
+    });
   }
 
-  async stop(): Promise<void> {
-    assertNotNull(this.serverRef);
-    await this.serverRef.stop();
+  async deinit() {
+    logger.info("Closing HTTP service");
+    await this.serverRef?.stop();
+    this.serverRef = null;
   }
 
   private buildRoutes() {
@@ -52,8 +60,3 @@ export class HttpServer {
 }
 
 const logger = Logger.for(HttpServer);
-
-type HttpServerStartArgs = {
-  host: string;
-  port: number | string;
-};

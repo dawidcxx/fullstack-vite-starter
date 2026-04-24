@@ -5,6 +5,8 @@ import type { Container } from "@needle-di/core";
 import { assertNotNull, isNil, randomIntRange } from "@the_application_name/common";
 import { SQL } from "bun";
 import { Migrator } from "@/shared/migrations/Migrator";
+import { OnDeinit } from "@/shared/OnDeinit";
+import { OnInit } from "@/shared/OnInit";
 import { createContainer } from "../../container";
 
 export type IntegrationTestCtx = IntegrationTestState & {
@@ -26,6 +28,9 @@ export async function getIntegrationTestContext(): Promise<IntegrationTestCtx> {
     });
     await dbServer.start();
     await container.get(Migrator).up();
+    const initables = container.get<OnInit>(OnInit, { multi: true });
+    await Promise.all(initables.map((it) => it.init()));
+
     state = {
       db,
       dbServer,
@@ -40,6 +45,10 @@ export async function getIntegrationTestContext(): Promise<IntegrationTestCtx> {
     ...state,
     async dispose(): Promise<void> {
       if (count === 0) {
+        const toDeinit = state!.container.get<OnDeinit>(OnDeinit, { multi: true });
+        await Promise.all(toDeinit.map((it) => it.deinit())).catch((e) => {
+          console.error("Failed to deinit", e);
+        });
         await state!.dbServer.stop();
         await state!.db.close();
       }

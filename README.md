@@ -34,4 +34,3 @@ This template uses a monorepo setup with bun workspaces:
 - `packages/backend/`: Bun + Hono.js API server with Drizzle ORM, migrations, and example todos feature
 - `packages/common/`: Shared TypeScript utilities, DTOs, and Valibot schemas for API contracts
 - `packages/web/`: Vite SPA with React, TailwindCSS, and SWR for data fetching
-

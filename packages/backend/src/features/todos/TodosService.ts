@@ -1,51 +1,47 @@
 import { inject, injectable } from "@needle-di/core";
-import {
-  assertNotNull,
-  type CreateTodoInput,
-  type Todo,
-  type TodoListResponse,
-} from "@the_application_name/common";
+import { assertNotNull, CreateTodoRequest, Todo, TodoParams } from "@the_application_name/common";
 import { eq, sql } from "drizzle-orm";
 import { BunSQLDatabase } from "drizzle-orm/bun-sql";
-import { TodoNotFoundError } from "./todosErrors";
-import { todosTable } from "./todosTable";
+import { TodoNotFoundError } from "./error/todosErrors";
+import { todosTable, type DbTodo } from "./model/todosTable";
 
 @injectable()
 export class TodosService {
   constructor(private readonly db: BunSQLDatabase = inject(BunSQLDatabase)) {}
 
-  async getAll(): Promise<TodoListResponse> {
+  async getAll(): Promise<Todo[]> {
     const dbTodos = await this.db.select().from(todosTable);
-    return {
-      todos: dbTodos.map(mapDbTodo),
-    };
+    return dbTodos.map(mapTodo);
   }
 
-  async create(input: CreateTodoInput): Promise<Todo> {
-    const inserted = await this.db.insert(todosTable).values({ title: input.title }).returning();
-    assertNotNull(inserted[0], "inserted[0]");
-    return mapDbTodo(inserted[0]);
+  async create(input: CreateTodoRequest): Promise<Todo> {
+    const [inserted] = await this.db
+      .insert(todosTable)
+      .values({ content: input.content })
+      .returning();
+    assertNotNull(inserted, "inserted");
+    return mapTodo(inserted);
   }
 
-  async update(id: string): Promise<Todo> {
+  async update({ id }: TodoParams): Promise<Todo> {
     const updated = await this.db
       .update(todosTable)
       .set({ completed: sql`NOT ${todosTable.completed}` })
       .where(eq(todosTable.id, id))
       .returning();
     if (updated.length === 0) {
-      throw new TodoNotFoundError(`Todo '${id}' not found`);
+      throw new TodoNotFoundError({ id });
     }
     assertNotNull(updated[0], "updated[0]");
-    return mapDbTodo(updated[0]);
+    return mapTodo(updated[0]);
   }
 }
 
-function mapDbTodo(row: typeof todosTable.$inferSelect): Todo {
+function mapTodo(dbTodo: DbTodo): Todo {
   return {
-    completed: row.completed,
-    createdAt: row.createdAt.toISOString(),
-    id: row.id,
-    title: row.title,
+    id: dbTodo.id,
+    content: dbTodo.content,
+    completed: dbTodo.completed,
+    createdAt: dbTodo.createdAt,
   };
 }

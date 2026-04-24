@@ -1,7 +1,4 @@
-export * from "./consts";
-export * from "./dto";
 export * from "./utils";
-
-export function exampleSharedComonFunction() {
-  return 42;
-}
+export * from "./api";
+export * from "./consts";
+export * from "./domain";

@@ -1,15 +1,14 @@
-import { createFetchClient, todosContract, type Todo } from "@the_application_name/common";
+import { uuidFromString, type Todo } from "@the_application_name/common";
 import { useEffect, useState, StrictMode } from "react";
-import { createRoot } from "react-dom/client";
 import "./index.css";
+import { createRoot } from "react-dom/client";
+import { todosApi } from "./lib/apis";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
   </StrictMode>,
 );
-
-const todosClient = createFetchClient(todosContract, { baseUrl: "/api" });
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -28,7 +27,7 @@ function App() {
   const refreshTodos = async () => {
     setIsLoading(true);
     setError(null);
-    const nextTodos = (await todosClient.list()).todos;
+    const nextTodos = (await todosApi.list()).todos;
     setTodos(nextTodos);
     setIsLoading(false);
   };
@@ -41,7 +40,7 @@ function App() {
 
     try {
       setError(null);
-      await todosClient.create({ body: { title } });
+      await todosApi.create({ body: { content: title } });
       setTitle("");
       await refreshTodos();
     } catch (err) {
@@ -52,7 +51,7 @@ function App() {
   const onToggle = async (id: string) => {
     try {
       setError(null);
-      await todosClient.toggle({ params: { id } });
+      await todosApi.toggle({ params: { id: uuidFromString(id) } });
       await refreshTodos();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to toggle todo");
@@ -88,7 +87,7 @@ function App() {
             >
               <div>
                 <p className={todo.completed ? "text-gray-400 line-through" : "text-gray-900"}>
-                  {todo.title}
+                  {todo.content}
                 </p>
                 <p className="text-xs text-gray-500">{new Date(todo.createdAt).toLocaleString()}</p>
               </div>

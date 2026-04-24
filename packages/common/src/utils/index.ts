@@ -6,3 +6,7 @@ export * from "./createFetchClient";
 export * from "./assertNotNull";
 export * from "./isNil";
 export * from "./randomIntRange";
+export * from "./assertUnreachable";
+export * from "./mapOptional";
+export * from "./id";
+export * from "./mapUtils";
