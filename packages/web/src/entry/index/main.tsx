@@ -1,8 +1,8 @@
+import "@/global.css";
 import { uuidFromString, type Todo } from "@the_application_name/common";
 import { useEffect, useState, StrictMode } from "react";
-import "./index.css";
 import { createRoot } from "react-dom/client";
-import { todosApi } from "./lib/apis";
+import { todosApi } from "@/lib/apis";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
