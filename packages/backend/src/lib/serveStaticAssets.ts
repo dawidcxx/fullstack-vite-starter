@@ -41,6 +41,12 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
 
   collectStaticAssets(absoluteStaticAssetsPath, assetLookupMap);
 
+  const pagePrefixEntries = pageEntries
+    .filter(([route]) => route !== "/")
+    .map(
+      ([route, htmlFileName]) => [route, resolve(absoluteStaticAssetsPath, htmlFileName)] as const,
+    );
+
   return createMiddleware(async (ctx, next) => {
     if (ctx.req.path.startsWith("/api")) return next();
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") return next();
@@ -50,6 +56,12 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
 
     if (filePath) {
       return new Response(Bun.file(filePath));
+    }
+
+    for (const [prefix, htmlPath] of pagePrefixEntries) {
+      if (ctx.req.path.startsWith(`${prefix}/`)) {
+        return new Response(Bun.file(htmlPath));
+      }
     }
 
     if (

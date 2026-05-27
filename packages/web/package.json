@@ -17,7 +17,8 @@
     "react-dom": "^19.2.4",
     "swr": "^2.4.1",
     "tailwindcss": "^4.2.2",
-    "valibot": "^1.2.0"
+    "valibot": "^1.2.0",
+    "wouter": "^3.10.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",

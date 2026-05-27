@@ -9,7 +9,27 @@ const rootDir = fileURLToPath(new URL(".", import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    {
+      name: "mpa-subroute-fallback",
+      configureServer(server) {
+        server.middlewares.use((req, _res, next) => {
+          if (!req.url) return next();
+          const url = new URL(req.url, `http://${req.headers.host ?? "localhost"}`);
+          if (url.pathname.includes(".")) return next();
+          for (const route of Object.keys(pages)) {
+            if (route !== "/" && (url.pathname === route || url.pathname.startsWith(`${route}/`))) {
+              req.url = route + url.search;
+              return next();
+            }
+          }
+          next();
+        });
+      },
+    },
+    react(),
+    tailwindcss(),
+  ],
   server: {
     proxy: {
       "/api": "http://localhost:8080",

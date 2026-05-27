@@ -1,12 +1,19 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "lsp": {
+    "typescript": {
+      "disabled": true
+    },
+    "tsgo": {
+      "disabled": false,
+      "command": ["tsgo", "--lsp", "--stdio"],
+      "extensions": [".cjs", ".mjs", ".js", ".jsx", ".ts", ".tsx", ".mts"]
+    }
+  },
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": [
-        "bunx",
-        "@playwright/mcp@latest"
-      ],
+      "command": ["bunx", "@playwright/mcp@latest"],
       "enabled": true
     }
   }
