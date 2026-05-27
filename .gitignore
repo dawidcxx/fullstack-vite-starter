@@ -33,3 +33,4 @@ dist-ssr
 backup/
 *.tsbuildinfo
 
+.playwright-mcp
