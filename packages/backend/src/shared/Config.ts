@@ -24,7 +24,7 @@ export class Config {
   }
 
   public get httpHost(): string {
-    return this.overridesMap.httpHost ?? process.env["HOST"] ?? "localhost";
+    return this.overridesMap.httpHost ?? process.env["HOST"] ?? "0.0.0.0";
   }
 
   public get httpPort(): string {
