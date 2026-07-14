@@ -31,13 +31,14 @@ services:
     profiles:
       - full
     environment:
-      POSTGRES_URL: postgresql://the_application_name:the_application_name@db:5432/the_application_name
+      DATABASE_URL: postgresql://the_application_name:the_application_name@db:5432/the_application_name
       PORT: 8080
       HOST: 0.0.0.0
     ports:
       - "6663:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

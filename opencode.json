@@ -1,20 +1,21 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "lsp": {
-    "typescript": {
-      "disabled": true
-    },
-    "tsgo": {
-      "disabled": false,
-      "command": ["tsgo", "--lsp", "--stdio"],
-      "extensions": [".cjs", ".mjs", ".js", ".jsx", ".ts", ".tsx", ".mts"]
-    }
+  "server": {
+    "port": 4096,
   },
+  "lsp": true,
   "mcp": {
-    "playwright": {
+    "@upstash/context7-mcp@latest": {
       "type": "local",
-      "command": ["bunx", "@playwright/mcp@latest"],
-      "enabled": true
+      "command": [
+        "pnpx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ]
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": ["pnpx", "-y", "chrome-devtools-mcp@latest", "--autoConnect", "--no-usage-statistics"]
     }
   }
 }

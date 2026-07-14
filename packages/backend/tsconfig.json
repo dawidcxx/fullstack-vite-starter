@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
@@ -17,6 +16,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+
+    "types": ["node"],
 
     // Best practices
     "strict": true,

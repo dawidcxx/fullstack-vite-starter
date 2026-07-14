@@ -1,9 +1,10 @@
 import { Container } from "@needle-di/core";
-import { SQL } from "bun";
-import { BunSQLDatabase, drizzle } from "drizzle-orm/bun-sql";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { TodosApi } from "./features/todos/TodosApi";
 import { Cache } from "./shared/Cache";
 import { Config } from "./shared/Config";
+import { DB, DB_SQL, type Sql } from "./shared/Db";
 import { HttpServer } from "./shared/HttpServer";
 import { Migrator } from "./shared/migrations/Migrator";
 import { OnDeinit } from "./shared/OnDeinit";
@@ -22,15 +23,15 @@ export function createContainer(): Container {
     },
   });
   container.bind({
-    provide: SQL,
+    provide: DB_SQL,
     useFactory() {
-      return Bun.sql;
+      return postgres(process.env.DATABASE_URL!, { onnotice: () => {} });
     },
   });
   container.bind({
-    provide: BunSQLDatabase,
+    provide: DB,
     useFactory(container) {
-      return drizzle({ client: container.get(SQL) });
+      return drizzle(container.get(DB_SQL) as Sql);
     },
   });
   container.bind(HttpServer);

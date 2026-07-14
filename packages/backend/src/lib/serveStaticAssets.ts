@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from "node:fs";
-import { isAbsolute, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { isAbsolute, relative, resolve } from "node:path";
 import { invariant, pages } from "@the_application_name/common";
 import { createMiddleware } from "hono/factory";
 
@@ -55,12 +56,12 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
       assetLookupMap.get(ctx.req.path) ?? assetLookupMap.get(normalizeRoutePath(ctx.req.path));
 
     if (filePath) {
-      return new Response(Bun.file(filePath));
+      return serveFile(filePath, absoluteStaticAssetsPath);
     }
 
     for (const [prefix, htmlPath] of pagePrefixEntries) {
       if (ctx.req.path.startsWith(`${prefix}/`)) {
-        return new Response(Bun.file(htmlPath));
+        return serveFile(htmlPath, absoluteStaticAssetsPath);
       }
     }
 
@@ -72,7 +73,7 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
       return ctx.text("Not Found", 404);
     }
 
-    return new Response(Bun.file(indexHtmlPath));
+    return serveFile(indexHtmlPath, absoluteStaticAssetsPath);
   });
 };
 
@@ -95,9 +96,61 @@ function collectStaticAssets(
   }
 }
 
+const fileCache = new Map<string, Uint8Array>();
+
+async function serveFile(filePath: string, root: string): Promise<Response> {
+  if (!isUnderRoot(filePath, root)) {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  const cached = fileCache.get(filePath);
+  if (cached) {
+    return new Response(cached, {
+      headers: { "Content-Type": getContentType(filePath) },
+    });
+  }
+
+  let content: Uint8Array;
+  try {
+    content = await readFile(filePath);
+  } catch {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  fileCache.set(filePath, content);
+  return new Response(content, {
+    headers: { "Content-Type": getContentType(filePath) },
+  });
+}
+
+
+const mimeTypes: Record<string, string> = {
+  ".html": "text/html",
+  ".js": "application/javascript",
+  ".mjs": "application/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
+  ".map": "application/json",
+};
+
+function getContentType(filePath: string): string {
+  const dotIdx = filePath.lastIndexOf(".");
+  if (dotIdx === -1) return "application/octet-stream";
+  return mimeTypes[filePath.slice(dotIdx)] ?? "application/octet-stream";
+}
+
 function normalizeRoutePath(path: string) {
   if (path === "/") return path;
-
   const normalizedPath = path.replace(/\/+$/, "");
   return normalizedPath === "" ? "/" : normalizedPath;
+}
+
+function isUnderRoot(filePath: string, root: string): boolean {
+  const rel = relative(root, filePath);
+  return !rel.startsWith("..") && !isAbsolute(rel);
 }

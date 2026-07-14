@@ -1,18 +1,19 @@
-import { resolve } from "path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { serve } from "@hono/node-server";
 import { inject, injectable } from "@needle-di/core";
 import { invariant } from "@the_application_name/common";
 import { Hono } from "hono";
-import { websocket, type BunWebSocketData } from "hono/bun";
-import { TodosApi } from "@/features/todos/TodosApi";
-import { honoJsErrorHandler } from "@/lib/honoJsApiErrorHandler";
-import { Logger } from "@/lib/Logger";
-import { serveStaticAssets } from "@/lib/serveStaticAssets";
+import { TodosApi } from "../features/todos/TodosApi";
+import { honoJsErrorHandler } from "../lib/honoJsApiErrorHandler";
+import { Logger } from "../lib/Logger";
+import { serveStaticAssets } from "../lib/serveStaticAssets";
 import { Config } from "./Config";
 import type { OnDeinit } from "./OnDeinit";
 
 @injectable()
 export class HttpServer implements OnDeinit {
-  private serverRef: Bun.Server<BunWebSocketData> | null = null;
+  private serverRef: ReturnType<typeof serve> | null = null;
 
   constructor(
     private readonly config = inject(Config),
@@ -23,11 +24,10 @@ export class HttpServer implements OnDeinit {
     invariant(this.serverRef === null, "Must not call .init() twice");
     const app = this.buildRoutes();
 
-    this.serverRef = Bun.serve({
-      port: this.config.httpPort,
-      hostname: this.config.httpHost,
+    this.serverRef = serve({
       fetch: app.fetch,
-      websocket: websocket,
+      port: parseInt(this.config.httpPort),
+      hostname: this.config.httpHost,
     });
 
     logger.info(`Server running at http://${this.config.httpHost}:${this.config.httpPort}`, {
@@ -37,15 +37,17 @@ export class HttpServer implements OnDeinit {
 
   async deinit() {
     logger.info("Closing HTTP service");
-    await this.serverRef?.stop();
-    this.serverRef = null;
+    if (this.serverRef) {
+      await new Promise<void>((res) => this.serverRef!.close(() => res()));
+      this.serverRef = null;
+    }
   }
 
   private buildRoutes() {
     const app = new Hono();
     const api = new Hono();
 
-    const frontendDistPath = resolve(import.meta.dir, "./public");
+    const frontendDistPath = resolve(dirname(fileURLToPath(import.meta.url)), "public");
     const fallBackErrorHandlerLogger = Logger.for("api.onError");
     api.onError(honoJsErrorHandler(fallBackErrorHandlerLogger));
 

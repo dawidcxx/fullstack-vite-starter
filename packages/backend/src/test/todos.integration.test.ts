@@ -1,26 +1,27 @@
-import { describe, beforeAll, afterAll, it, expect } from "bun:test";
-import { TodosService } from "@/features/todos/TodosService";
+import assert from "node:assert/strict";
+import { describe, before, after, it } from "node:test";
+import { TodosService } from "../features/todos/TodosService";
 import { getIntegrationTestContext, type IntegrationTestCtx } from "./utils/integrationTestContext";
 
 describe("ScoreService integration test suite", () => {
   let ctx: IntegrationTestCtx;
 
-  beforeAll(async () => {
+  before(async () => {
     ctx = await getIntegrationTestContext();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await ctx.dispose();
   });
 
   it("Should not fail while basic todos API operations", async () => {
     const todosService = ctx.container.get(TodosService);
     const createdTodo = await todosService.create({ content: "Hello world!1" });
-    expect(createdTodo.completed).toEqual(false);
+    assert.deepStrictEqual(createdTodo.completed, false);
 
     const todos = await todosService.getAll();
-    expect(todos.length).toBeGreaterThanOrEqual(1);
+    assert.ok(todos.length >= 1);
     const toggledTodo = await todosService.update({ id: createdTodo.id });
-    expect(toggledTodo.completed).toEqual(true);
+    assert.deepStrictEqual(toggledTodo.completed, true);
   });
 });

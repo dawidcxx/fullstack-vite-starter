@@ -9,6 +9,8 @@ import { OnDeinit } from "./shared/OnDeinit";
 const logger = Logger.for("main");
 const container = createContainer();
 
+process.title = "the_application_name";
+
 try {
   await container.get(Migrator).up();
 } catch (e) {
@@ -41,11 +43,10 @@ function handleShutdown(signal: NodeJS.Signals) {
   });
 }
 
-process.on("SIGKILL", handleShutdown);
 process.on("SIGINT", handleShutdown);
 process.on("SIGTERM", handleShutdown);
 process.on("unhandledRejection", (reason) => {
   logger.error("Unhandled promise rejection", { reason: serializeError(reason) });
   const onDone = () => logger.info("Exited due to unhandled rejection");
-  Promise.race([sleep(500), handleShutdown("SIGKILL")]).then(onDone, onDone);
+  Promise.race([sleep(500), handleShutdown("SIGTERM")]).then(onDone, onDone);
 });

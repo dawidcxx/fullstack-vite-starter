@@ -1,11 +1,12 @@
 import { inject, injectable } from "@needle-di/core";
-import { SQL } from "bun";
+import type postgres from "postgres";
 import { Logger } from "@/lib/Logger";
+import { DB_SQL, type Sql } from "@/shared/Db";
 import { dbMigrations } from "./migrations";
 
 @injectable()
 export class Migrator {
-  constructor(private readonly sql: SQL = inject(SQL)) {}
+  constructor(private readonly sql: Sql = inject(DB_SQL)) {}
 
   async up(): Promise<void> {
     const startedAt = new Date().getTime();
@@ -50,7 +51,9 @@ export class Migrator {
     `);
   }
 
-  private async getDbMigrations(tx: Bun.SQL): Promise<{ name: string; checksum: string }[]> {
+  private async getDbMigrations(
+    tx: postgres.TransactionSql,
+  ): Promise<{ name: string; checksum: string }[]> {
     const rows = await tx<{ name: string; checksum: string }[]>`
       SELECT name, checksum
       FROM schema_migrations

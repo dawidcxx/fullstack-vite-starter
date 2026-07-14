@@ -1,4 +1,12 @@
-import migration001 from "./sql/001_initial_schema.sql" with { type: "text" };
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const migration001 = readFileSync(resolve(__dirname, "./sql/001_initial_schema.sql"), "utf-8");
 
 export const dbMigrations: readonly DbMigration[] = [
   migration("migration001", migration001),
@@ -15,6 +23,6 @@ function migration(name: string, sql: string) {
   return {
     name: name,
     sql,
-    checksum: Bun.hash(sql).toString(16),
+    checksum: createHash("sha256").update(sql).digest("hex"),
   } as const;
 }

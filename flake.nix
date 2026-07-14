@@ -10,10 +10,11 @@
       system:
       let
         pkgs = (import (inputs.nixpkgs) { inherit system; });
+        node = pkgs.nodejs_26;
       in
       {
         devShell = pkgs.mkShell {
-          shellHook = '' 
+          shellHook = ''
             PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/ms-playwright"
             export PLAYWRIGHT_BROWSERS_PATH
             export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
@@ -33,16 +34,14 @@
             git
             zip
 
-            # web dev tools
-            bun
             oxlint
             oxfmt
-            playwright-driver.browsers
+            node
+            pnpm
 
-            # nix related
+            playwright-driver.browsers
             nixpkgs-fmt
 
-            # tasks
             (pkgs.writeShellScriptBin "format" ''
               if [ ! -d .git ]; then
                 echo "This script must be run from the repository root"
@@ -64,9 +63,9 @@
                 echo "This script must be run from the repository root"
                 exit 1
               fi
-              ${pkgs.bun}/bin/bun run build:common
-              ${pkgs.bun}/bin/bun run build:web
-              ${pkgs.bun}/bin/bun run build:backend
+              ${pkgs.pnpm}/bin/pnpm run build:common
+              ${pkgs.pnpm}/bin/pnpm run build:web
+              ${pkgs.pnpm}/bin/pnpm run build:backend
             '')
 
             (pkgs.writeShellScriptBin "run" ''
@@ -75,7 +74,7 @@
                 exit 1
               fi
               export NODE_ENV=production
-              ${pkgs.bun}/bin/bun ./packages/backend/dist/main.js
+              ${node}/bin/node ./packages/backend/dist/main.js
             '')
 
             (pkgs.writeShellScriptBin "clean" ''
@@ -83,14 +82,14 @@
                 echo "This script must be run from the repository root"
                 exit 1
               fi
-              
+
               clean_path() {
                 echo "Removing $1"
                 rm -rf "$1"
               }
-              
+
               echo "Cleaning up build artifacts and node_modules..."
-              
+
               clean_path ./node_modules
               clean_path ./packages/backend/node_modules
               clean_path ./packages/backend/dist
@@ -98,11 +97,9 @@
               clean_path ./packages/common/dist
               clean_path ./packages/web/node_modules
               clean_path ./packages/web/dist
-              
 
               clean_path ./packages/web/tsconfig.app.tsbuildinfo
               clean_path ./packages/web/tsconfig.node.tsbuildinfo
-
 
               echo "Clean complete."
             '')

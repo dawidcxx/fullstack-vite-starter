@@ -1,13 +1,12 @@
 import { injectable } from "@needle-di/core";
 import { isNil } from "@the_application_name/common";
-import { LOG_LEVELS, type LogLevel } from "@/lib/Logger";
+import { LOG_LEVELS, type LogLevel } from "../lib/Logger";
 
 @injectable()
 export class Config {
   constructor(private readonly overridesMap: Partial<Config> = {}) {}
 
   public get ttlCacheSize(): number {
-    // App stores 10k cached items by default
     return this.overridesMap.ttlCacheSize ?? 10000;
   }
 
@@ -28,6 +27,6 @@ export class Config {
   }
 
   public get httpPort(): string {
-    return this.overridesMap.httpHost ?? process.env["PORT"] ?? "8080";
+    return this.overridesMap.httpPort ?? process.env["PORT"] ?? "8080";
   }
 }
