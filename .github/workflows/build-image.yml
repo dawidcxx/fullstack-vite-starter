@@ -15,6 +15,7 @@ on:
       - "packages/web/package.json"
       - ".github/workflows/build-image.yml"
       - "docker/Dockerfile"
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
