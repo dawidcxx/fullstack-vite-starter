@@ -3,7 +3,7 @@ import { $ } from "bun";
 await Bun.build({
   entrypoints: ["./src/main.ts"],
   outdir: "./dist",
-  target: "bun",
+  target: "node",
   sourcemap: "external",
 });
 await $`cp -r ./src/shared/migrations/sql ./dist/sql`;

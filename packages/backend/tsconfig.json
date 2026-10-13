@@ -17,6 +17,8 @@
       "@/*": ["./src/*"]
     },
 
+    "types": ["bun"],
+
     // Best practices
     "strict": true,
     "skipLibCheck": true,

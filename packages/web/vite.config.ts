@@ -1,11 +1,10 @@
 import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { pages } from "@the_application_name/common";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-const rootDir = fileURLToPath(new URL(".", import.meta.url));
+const rootDir = import.meta.dirname;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -37,7 +36,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
+      "@": resolve(import.meta.dirname, "./src"),
     },
   },
   build: {

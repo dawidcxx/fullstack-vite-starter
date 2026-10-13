@@ -5,16 +5,21 @@ on:
     branches:
       - main
     paths:
+      - "package.json"
+      - "bun.lock"
+      - "packages/*/build.ts"
+      - "packages/*/tsconfig*.json"
       - "packages/backend/src/**"
-      - "packages/backend/build.ts"
       - "packages/common/src/**"
       - "packages/web/src/**"
       - "packages/web/*.html"
+      - "packages/web/vite.config.ts"
+      - "packages/web/vitest.config.ts"
       - "packages/backend/package.json"
       - "packages/common/package.json"
       - "packages/web/package.json"
       - ".github/workflows/build-image.yml"
-      - "docker/Dockerfile"
+      - "docker/**"
   workflow_dispatch:
 
 env:
