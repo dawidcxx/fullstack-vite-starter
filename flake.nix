@@ -14,22 +14,6 @@
       in
       {
         devShell = pkgs.mkShell {
-          shellHook = ''
-            PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/ms-playwright"
-            export PLAYWRIGHT_BROWSERS_PATH
-            export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-            export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"
-
-            export PLAYWRIGHT_MCP_BROWSER=chromium
-            export PLAYWRIGHT_MCP_EXECUTABLE_PATH="$PLAYWRIGHT_BROWSERS_PATH/chromium-1217/chrome-linux64/chrome"
-            export PLAYWRIGHT_MCP_USER_DATA_DIR="$HOME/.cache/playwright-mcp-profile"
-
-            mkdir -p "$PLAYWRIGHT_BROWSERS_PATH" "$PLAYWRIGHT_MCP_USER_DATA_DIR"
-            if [ -n "$(ls -A ${pkgs.playwright-driver.browsers})" ]; then
-              cp -an ${pkgs.playwright-driver.browsers}/* "$PLAYWRIGHT_BROWSERS_PATH"/
-            fi
-          '';
-
           buildInputs = with pkgs; [
             git
             zip
@@ -39,7 +23,6 @@
             node
             pnpm
 
-            playwright-driver.browsers
             nixpkgs-fmt
 
             (pkgs.writeShellScriptBin "format" ''
