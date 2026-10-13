@@ -13,18 +13,19 @@
     }
   },
   "scripts": {
-    "build": "tsc --emitDeclarationOnly && node build.mjs",
+    "build": "tsc --emitDeclarationOnly && bun run ./build.ts",
+    "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit -p ./tsconfig.json",
-    "dev": "tsc --emitDeclarationOnly --watch & esbuild ./src/index.ts --bundle --platform=browser --outdir=./dist --external:valibot --format=esm --watch",
-    "test": "tsc --noEmit && node --import tsx/esm --test \"src/**/*.test.ts\""
+    "bundle:watch": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --external valibot --watch",
+    "types:watch": "tsc --emitDeclarationOnly --watch",
+    "dev": "bun run bundle:watch & bun run types:watch",
+    "test": "tsc --noEmit && bun test"
   },
   "dependencies": {
     "valibot": "^1.2.0"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
-    "esbuild": "^0.28.1",
-    "tsx": "^4.19.0",
+    "@types/bun": "latest",
     "typescript": "^7.0.0"
   }
 }

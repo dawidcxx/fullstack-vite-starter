@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --import tsx/esm --watch --env-file .env.local src/main.ts",
-    "build": "tsc --noEmit && node build.mjs",
+    "dev": "bun --watch --env-file=./.env.local run ./src/main.ts",
+    "build": "bun run ./build.ts",
     "typecheck": "tsc --noEmit -p ./tsconfig.json",
-    "test": "tsc --noEmit && node --import tsx/esm --test \"src/**/*.test.ts\""
+    "test": "tsc --noEmit && bun test"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.1",
@@ -22,9 +22,7 @@
     "valibot": "^1.2.0"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
-    "esbuild": "^0.28.1",
-    "tsx": "^4.19.0",
+    "@types/bun": "latest",
     "typescript": "^7.0.0"
   }
 }

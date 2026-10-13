@@ -1,45 +1,37 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "bun:test";
 import { mapOptional } from "./mapOptional";
 
 describe("mapOptional", () => {
   it("returns null for nullish input", () => {
-    assert.strictEqual(
+    expect(
       mapOptional(null, (x: number) => x * 2),
-      null,
-    );
-    assert.strictEqual(
+    ).toBe(null);
+    expect(
       mapOptional(undefined, (x: number) => x * 2),
-      null,
-    );
+    ).toBe(null);
   });
 
   it("applies mapping fn for non-nullish input", () => {
-    assert.strictEqual(
+    expect(
       mapOptional(5, (x) => x * 2),
-      10,
-    );
+    ).toBe(10);
   });
 
   it("handles string transformation", () => {
-    assert.strictEqual(
+    expect(
       mapOptional("hello", (s) => s.toUpperCase()),
-      "HELLO",
-    );
+    ).toBe("HELLO");
   });
 
   it("handles falsy non-null values", () => {
-    assert.strictEqual(
+    expect(
       mapOptional(0, (x) => x + 1),
-      1,
-    );
-    assert.strictEqual(
+    ).toBe(1);
+    expect(
       mapOptional("", (s) => s.length),
-      0,
-    );
-    assert.strictEqual(
+    ).toBe(0);
+    expect(
       mapOptional(false, (b) => !b),
-      true,
-    );
+    ).toBe(true);
   });
 });

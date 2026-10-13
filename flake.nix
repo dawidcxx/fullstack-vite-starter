@@ -10,7 +10,6 @@
       system:
       let
         pkgs = (import (inputs.nixpkgs) { inherit system; });
-        node = pkgs.nodejs_26;
       in
       {
         devShell = pkgs.mkShell {
@@ -18,13 +17,15 @@
             git
             zip
 
+            # web dev tools
+            bun
             oxlint
             oxfmt
-            node
-            pnpm
 
+            # nix related
             nixpkgs-fmt
 
+            # tasks
             (pkgs.writeShellScriptBin "format" ''
               if [ ! -d .git ]; then
                 echo "This script must be run from the repository root"
@@ -46,9 +47,9 @@
                 echo "This script must be run from the repository root"
                 exit 1
               fi
-              ${pkgs.pnpm}/bin/pnpm run build:common
-              ${pkgs.pnpm}/bin/pnpm run build:web
-              ${pkgs.pnpm}/bin/pnpm run build:backend
+              ${pkgs.bun}/bin/bun run build:common
+              ${pkgs.bun}/bin/bun run build:web
+              ${pkgs.bun}/bin/bun run build:backend
             '')
 
             (pkgs.writeShellScriptBin "run" ''
@@ -57,7 +58,7 @@
                 exit 1
               fi
               export NODE_ENV=production
-              ${node}/bin/node ./packages/backend/dist/main.js
+              ${pkgs.bun}/bin/bun ./packages/backend/dist/main.js
             '')
 
             (pkgs.writeShellScriptBin "clean" ''

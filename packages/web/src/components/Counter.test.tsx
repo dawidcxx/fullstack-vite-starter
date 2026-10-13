@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import { describe, it, expect, afterEach } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { Counter } from "./Counter";
 
 afterEach(cleanup);

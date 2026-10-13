@@ -17,8 +17,6 @@
       "@/*": ["./src/*"]
     },
 
-    "types": ["node"],
-
     // Best practices
     "strict": true,
     "skipLibCheck": true,

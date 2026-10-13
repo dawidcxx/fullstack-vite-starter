@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "bun:test";
 import { Cache } from "../Cache";
 
 describe("Cache", () => {
@@ -7,50 +6,50 @@ describe("Cache", () => {
     const cache = new Cache(3);
     cache.set("key1", "value1");
     cache.set("key2", "value2");
-    assert.deepStrictEqual(cache.get("key1"), "value1");
-    assert.deepStrictEqual(cache.get("key2"), "value2");
+    expect(cache.get("key1")).toBe("value1");
+    expect(cache.get("key2")).toBe("value2");
   });
 
   it("should evict least recently used when capacity exceeded", () => {
     const cache = new Cache(2);
     cache.set("key1", "value1");
     cache.set("key2", "value2");
-    cache.set("key3", "value3");
-    assert.deepStrictEqual(cache.get("key1"), undefined);
-    assert.deepStrictEqual(cache.get("key2"), "value2");
-    assert.deepStrictEqual(cache.get("key3"), "value3");
+    cache.set("key3", "value3"); // should evict key1
+    expect(cache.get("key1")).toBeUndefined();
+    expect(cache.get("key2")).toBe("value2");
+    expect(cache.get("key3")).toBe("value3");
   });
 
   it("should update LRU order on get", () => {
     const cache = new Cache(2);
     cache.set("key1", "value1");
     cache.set("key2", "value2");
-    cache.get("key1");
-    cache.set("key3", "value3");
-    assert.deepStrictEqual(cache.get("key2"), undefined);
-    assert.deepStrictEqual(cache.get("key1"), "value1");
+    cache.get("key1"); // key1 now most recent
+    cache.set("key3", "value3"); // should evict key2
+    expect(cache.get("key2")).toBeUndefined();
+    expect(cache.get("key1")).toBe("value1");
   });
 
   it("should handle TTL expiration", async () => {
     const cache = new Cache(3);
-    cache.set("key1", "value1", 100);
-    assert.deepStrictEqual(cache.get("key1"), "value1");
+    cache.set("key1", "value1", 100); // 100ms TTL
+    expect(cache.get("key1")).toBe("value1");
     await new Promise((resolve) => setTimeout(resolve, 150));
-    assert.deepStrictEqual(cache.get("key1"), undefined);
+    expect(cache.get("key1")).toBeUndefined();
   });
 
   it("should handle infinite TTL", () => {
     const cache = new Cache(3);
-    cache.set("key1", "value1");
-    assert.deepStrictEqual(cache.get("key1"), "value1");
+    cache.set("key1", "value1"); // no TTL
+    expect(cache.get("key1")).toBe("value1");
   });
 
   it("should delete entries", () => {
     const cache = new Cache(3);
     cache.set("key1", "value1");
-    assert.deepStrictEqual(cache.delete("key1"), true);
-    assert.deepStrictEqual(cache.get("key1"), undefined);
-    assert.deepStrictEqual(cache.delete("key1"), false);
+    expect(cache.delete("key1")).toBe(true);
+    expect(cache.get("key1")).toBeUndefined();
+    expect(cache.delete("key1")).toBe(false);
   });
 
   it("should clear all entries", () => {
@@ -58,17 +57,17 @@ describe("Cache", () => {
     cache.set("key1", "value1");
     cache.set("key2", "value2");
     cache.clear();
-    assert.deepStrictEqual(cache.size(), 0);
-    assert.deepStrictEqual(cache.get("key1"), undefined);
+    expect(cache.size()).toBe(0);
+    expect(cache.get("key1")).toBeUndefined();
   });
 
   it("should return correct size", () => {
     const cache = new Cache(3);
-    assert.deepStrictEqual(cache.size(), 0);
+    expect(cache.size()).toBe(0);
     cache.set("key1", "value1");
-    assert.deepStrictEqual(cache.size(), 1);
+    expect(cache.size()).toBe(1);
     cache.set("key2", "value2");
-    assert.deepStrictEqual(cache.size(), 2);
+    expect(cache.size()).toBe(2);
   });
 
   it("should memoize function results", () => {
@@ -79,10 +78,10 @@ describe("Cache", () => {
       return 42;
     };
     const result1 = cache.memo("key1", expensiveFn);
-    assert.deepStrictEqual(result1, 42);
-    assert.deepStrictEqual(callCount, 1);
+    expect(result1).toBe(42);
+    expect(callCount).toBe(1);
     const result2 = cache.memo("key1", expensiveFn);
-    assert.deepStrictEqual(result2, 42);
-    assert.deepStrictEqual(callCount, 1);
+    expect(result2).toBe(42);
+    expect(callCount).toBe(1); // should not call again
   });
 });

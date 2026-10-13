@@ -1,6 +1,6 @@
 import { injectable } from "@needle-di/core";
 import { isNil } from "@the_application_name/common";
-import { LOG_LEVELS, type LogLevel } from "../lib/Logger";
+import { LOG_LEVELS, type LogLevel } from "@/lib/Logger";
 
 @injectable()
 export class Config {
