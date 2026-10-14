@@ -4,11 +4,12 @@ import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import type { Container } from "@needle-di/core";
 import { assertNotNull, isNil, randomIntRange } from "@the_application_name/common";
 import postgres from "postgres";
-import { createContainer } from "../../container";
-import { DB_SQL } from "../../shared/Db";
-import { Migrator } from "../../shared/migrations/Migrator";
-import { OnDeinit } from "../../shared/OnDeinit";
-import { OnInit } from "../../shared/OnInit";
+import { createContainer } from "@/container";
+import { DB_SQL } from "@/shared/Db";
+import { HttpServer } from "@/shared/HttpServer";
+import { Migrator } from "@/shared/migrations/Migrator";
+import { OnDeinit } from "@/shared/OnDeinit";
+import { OnInit } from "@/shared/OnInit";
 
 export type IntegrationTestCtx = IntegrationTestState & {
   dispose: () => Promise<void>;
@@ -31,7 +32,10 @@ export async function getIntegrationTestContext(): Promise<IntegrationTestCtx> {
       },
     });
     await container.get(Migrator).up();
-    const initables = container.get<OnInit>(OnInit, { multi: true });
+    // Warm up feature services, but do not start the HTTP listener in tests.
+    const initables = container
+      .get<OnInit>(OnInit, { multi: true })
+      .filter((it) => !(it instanceof HttpServer));
     await Promise.all(initables.map((it) => it.init()));
 
     state = {

@@ -1,7 +1,7 @@
 import { inject, injectable } from "@needle-di/core";
 import { assertNotNull, CreateTodoRequest, Todo, TodoParams } from "@the_application_name/common";
 import { eq, sql } from "drizzle-orm";
-import { DB, type DrizzleDb } from "../../shared/Db";
+import { DB, type DrizzleDb } from "@/shared/Db";
 import { TodoNotFoundError } from "./error/todosErrors";
 import { todosTable, type DbTodo } from "./model/todosTable";
 

@@ -63,6 +63,16 @@ export class Logger {
     }
   }
 
+  metric(message: string, value: number, unit: string): void {
+    const line = JSON.stringify({
+      level: "metric",
+      message,
+      unit,
+      value,
+    });
+    console.log(line);
+  }
+
   private writeLog(level: string, message: string, meta: LoggerMetaObj): void {
     const line = JSON.stringify({
       level,

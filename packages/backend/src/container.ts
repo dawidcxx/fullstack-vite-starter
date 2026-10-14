@@ -49,6 +49,11 @@ export function createContainer(): Container {
       }
     },
   });
+  container.bind({
+    multi: true,
+    provide: OnInit,
+    useExisting: HttpServer,
+  });
 
   // De-initables
   container.bind({

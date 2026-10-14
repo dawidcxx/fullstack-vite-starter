@@ -1,8 +1,12 @@
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { invariant, pages } from "@the_application_name/common";
+import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
+
+const isProduction = process.env["NODE_ENV"] === "production";
 
 export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
   invariant(
@@ -52,16 +56,20 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
     if (ctx.req.path.startsWith("/api")) return next();
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") return next();
 
+    if (isProduction && ctx.req.path.endsWith(".map")) {
+      return ctx.text("Not Found", 404);
+    }
+
     const filePath =
       assetLookupMap.get(ctx.req.path) ?? assetLookupMap.get(normalizeRoutePath(ctx.req.path));
 
     if (filePath) {
-      return serveFile(filePath, absoluteStaticAssetsPath);
+      return serveFile(ctx, filePath, absoluteStaticAssetsPath);
     }
 
     for (const [prefix, htmlPath] of pagePrefixEntries) {
       if (ctx.req.path.startsWith(`${prefix}/`)) {
-        return serveFile(htmlPath, absoluteStaticAssetsPath);
+        return serveFile(ctx, htmlPath, absoluteStaticAssetsPath);
       }
     }
 
@@ -73,7 +81,7 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
       return ctx.text("Not Found", 404);
     }
 
-    return serveFile(indexHtmlPath, absoluteStaticAssetsPath);
+    return serveFile(ctx, indexHtmlPath, absoluteStaticAssetsPath);
   });
 };
 
@@ -96,31 +104,59 @@ function collectStaticAssets(
   }
 }
 
-const fileCache = new Map<string, Uint8Array>();
+type CachedFile = {
+  content: Uint8Array;
+  etag: string;
+};
 
-async function serveFile(filePath: string, root: string): Promise<Response> {
+const fileCache = new Map<string, CachedFile>();
+
+async function serveFile(ctx: Context, filePath: string, root: string): Promise<Response> {
   if (!isUnderRoot(filePath, root)) {
     return new Response("Not Found", { status: 404 });
   }
 
-  const cached = fileCache.get(filePath);
-  if (cached) {
-    return new Response(cached, {
-      headers: { "Content-Type": getContentType(filePath) },
-    });
+  let cached = fileCache.get(filePath);
+  if (!cached) {
+    let content: Uint8Array;
+    try {
+      content = await readFile(filePath);
+    } catch {
+      return new Response("Not Found", { status: 404 });
+    }
+    cached = {
+      content,
+      etag: `"${createHash("sha1").update(content).digest("base64url")}"`,
+    };
+    fileCache.set(filePath, cached);
   }
 
-  let content: Uint8Array;
-  try {
-    content = await readFile(filePath);
-  } catch {
-    return new Response("Not Found", { status: 404 });
+  const headers: Record<string, string> = {
+    "Content-Type": getContentType(filePath),
+    "Cache-Control": getCacheControl(filePath, root),
+    ETag: cached.etag,
+  };
+
+  if (ctx.req.header("If-None-Match") === cached.etag) {
+    return new Response(null, { status: 304, headers });
   }
 
-  fileCache.set(filePath, content);
-  return new Response(content, {
-    headers: { "Content-Type": getContentType(filePath) },
-  });
+  if (ctx.req.method === "HEAD") {
+    return new Response(null, { status: 200, headers });
+  }
+
+  return new Response(cached.content, { headers });
+}
+
+function getCacheControl(filePath: string, root: string): string {
+  if (filePath.endsWith(".html")) {
+    return "no-cache";
+  }
+  const relativePath = relative(root, filePath).replace(/\\/g, "/");
+  if (relativePath.startsWith("assets/")) {
+    return "public, max-age=31536000, immutable";
+  }
+  return "public, max-age=3600";
 }
 
 const mimeTypes: Record<string, string> = {

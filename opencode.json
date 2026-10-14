@@ -8,16 +8,6 @@
     "@upstash/context7-mcp@latest": {
       "type": "local",
       "command": ["bunx", "-y", "@upstash/context7-mcp@latest"]
-    },
-    "chrome-devtools": {
-      "type": "local",
-      "command": [
-        "bunx",
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--autoConnect",
-        "--no-usage-statistics"
-      ]
     }
   }
 }

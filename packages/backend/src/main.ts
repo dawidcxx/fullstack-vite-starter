@@ -2,9 +2,9 @@ import { serializeError } from "serialize-error";
 import { createContainer } from "./container";
 import { Logger } from "./lib/Logger";
 import { sleep } from "./lib/sleep";
-import { HttpServer } from "./shared/HttpServer";
 import { Migrator } from "./shared/migrations/Migrator";
 import { OnDeinit } from "./shared/OnDeinit";
+import { OnInit } from "./shared/OnInit";
 
 const logger = Logger.for("main");
 const container = createContainer();
@@ -18,8 +18,13 @@ try {
   process.exit(1);
 }
 
-const httpServer = container.get(HttpServer);
-await httpServer.init();
+try {
+  const toInit: OnInit[] = container.get(OnInit, { multi: true });
+  await Promise.all(toInit.map((initable) => initable.init()));
+} catch (e) {
+  logger.error("Failed to run init hooks", { error: serializeError(e) });
+  process.exit(1);
+}
 
 function handleShutdown(signal: NodeJS.Signals) {
   logger.info("Shutdown signal retrieved", { signal });

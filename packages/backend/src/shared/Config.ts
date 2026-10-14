@@ -29,4 +29,27 @@ export class Config {
   public get httpPort(): string {
     return this.overridesMap.httpPort ?? process.env["PORT"] ?? "8080";
   }
+
+  public get maxRequestBodyBytes(): number {
+    if (!isNil(this.overridesMap.maxRequestBodyBytes)) {
+      return this.overridesMap.maxRequestBodyBytes;
+    }
+    const fromEnv = process.env["MAX_REQUEST_BODY_BYTES"];
+    const parsed = isNil(fromEnv) ? NaN : Number.parseInt(fromEnv, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1024 * 1024;
+  }
+
+  public get corsOrigins(): string[] {
+    if (!isNil(this.overridesMap.corsOrigins)) {
+      return this.overridesMap.corsOrigins;
+    }
+    const fromEnv = process.env["CORS_ORIGINS"];
+    if (isNil(fromEnv)) {
+      return [];
+    }
+    return fromEnv
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0);
+  }
 }

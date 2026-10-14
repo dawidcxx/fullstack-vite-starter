@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Cache } from "../Cache";
+import { Cache } from "@/shared/Cache";
 
 describe("Cache", () => {
   it("should store and retrieve values", () => {

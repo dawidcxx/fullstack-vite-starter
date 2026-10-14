@@ -2,17 +2,22 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { inject, injectable } from "@needle-di/core";
-import { invariant } from "@the_application_name/common";
+import { HttpStatusCodes, invariant } from "@the_application_name/common";
 import { Hono } from "hono";
-import { TodosApi } from "../features/todos/TodosApi";
-import { honoJsErrorHandler } from "../lib/honoJsApiErrorHandler";
-import { Logger } from "../lib/Logger";
-import { serveStaticAssets } from "../lib/serveStaticAssets";
+import { bodyLimit } from "hono/body-limit";
+import { cors } from "hono/cors";
+import { secureHeaders } from "hono/secure-headers";
+import { TodosApi } from "@/features/todos/TodosApi";
+import { honoJsErrorHandler } from "@/lib/honoJsApiErrorHandler";
+import { Logger } from "@/lib/Logger";
+import { requestObservability, type RequestObservabilityEnv } from "@/lib/requestObservability";
+import { serveStaticAssets } from "@/lib/serveStaticAssets";
 import { Config } from "./Config";
 import type { OnDeinit } from "./OnDeinit";
+import type { OnInit } from "./OnInit";
 
 @injectable()
-export class HttpServer implements OnDeinit {
+export class HttpServer implements OnDeinit, OnInit {
   private serverRef: ReturnType<typeof serve> | null = null;
 
   constructor(
@@ -44,12 +49,40 @@ export class HttpServer implements OnDeinit {
   }
 
   private buildRoutes() {
-    const app = new Hono();
-    const api = new Hono();
+    const app = new Hono<RequestObservabilityEnv>();
+    const api = new Hono<RequestObservabilityEnv>();
+
+    app.use("*", requestObservability());
+    app.use("*", secureHeaders());
 
     const frontendDistPath = resolve(dirname(fileURLToPath(import.meta.url)), "public");
     const fallBackErrorHandlerLogger = Logger.for("api.onError");
     api.onError(honoJsErrorHandler(fallBackErrorHandlerLogger));
+
+    const corsOrigins = this.config.corsOrigins;
+    if (corsOrigins.length > 0) {
+      api.use(
+        "*",
+        cors({
+          origin: corsOrigins,
+          credentials: true,
+          allowMethods: ["GET", "HEAD", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+          allowHeaders: ["Content-Type"],
+        }),
+      );
+    }
+
+    api.use(
+      "*",
+      bodyLimit({
+        maxSize: this.config.maxRequestBodyBytes,
+        onError: (c) =>
+          c.json(
+            { code: "PayloadTooLarge", message: "Request body exceeds the configured limit" },
+            HttpStatusCodes.PAYLOAD_TOO_LARGE,
+          ),
+      }),
+    );
 
     api.route("/", this.todosApi.build());
     app.route("/api", api);
