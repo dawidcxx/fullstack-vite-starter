@@ -123,7 +123,6 @@ async function serveFile(filePath: string, root: string): Promise<Response> {
   });
 }
 
-
 const mimeTypes: Record<string, string> = {
   ".html": "text/html",
   ".js": "application/javascript",

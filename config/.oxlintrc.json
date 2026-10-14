@@ -2,7 +2,17 @@
   "plugins": ["unicorn", "typescript", "oxc"],
   "categories": {},
   "rules": {
-    "no-duplicate-imports": "error"
+    "no-duplicate-imports": "error",
+    "no-unused-vars": [
+      "warn",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ]
   },
   "settings": {
     "jsx-a11y": {
