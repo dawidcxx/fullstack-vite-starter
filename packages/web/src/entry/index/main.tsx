@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")!).render(
     </Router>
   </StrictMode>,
 );
-
+// small change to trigger it
 function AppRouter() {
   return (
     <Switch>
