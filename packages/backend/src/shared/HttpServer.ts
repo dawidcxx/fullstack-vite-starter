@@ -53,36 +53,11 @@ export class HttpServer implements OnDeinit, OnInit {
     const api = new Hono<RequestObservabilityEnv>();
 
     app.use("*", requestObservability());
-    app.use("*", secureHeaders());
+    applySecurityMiddlewares(app, this.config);
 
     const frontendDistPath = resolve(dirname(fileURLToPath(import.meta.url)), "public");
     const fallBackErrorHandlerLogger = Logger.for("api.onError");
     api.onError(honoJsErrorHandler(fallBackErrorHandlerLogger));
-
-    const corsOrigins = this.config.corsOrigins;
-    if (corsOrigins.length > 0) {
-      api.use(
-        "*",
-        cors({
-          origin: corsOrigins,
-          credentials: true,
-          allowMethods: ["GET", "HEAD", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-          allowHeaders: ["Content-Type"],
-        }),
-      );
-    }
-
-    api.use(
-      "*",
-      bodyLimit({
-        maxSize: this.config.maxRequestBodyBytes,
-        onError: (c) =>
-          c.json(
-            { code: "PayloadTooLarge", message: "Request body exceeds the configured limit" },
-            HttpStatusCodes.PAYLOAD_TOO_LARGE,
-          ),
-      }),
-    );
 
     api.route("/", this.todosApi.build());
     app.route("/api", api);
@@ -95,3 +70,32 @@ export class HttpServer implements OnDeinit, OnInit {
 }
 
 const logger = Logger.for(HttpServer);
+
+function applySecurityMiddlewares(app: Hono<RequestObservabilityEnv>, config: Config) {
+  app.use("*", secureHeaders());
+
+  if (config.corsOrigins.length > 0) {
+    app.use(
+      "*",
+      cors({
+        origin: config.corsOrigins,
+        credentials: true,
+        allowMethods: ["GET", "HEAD", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+        allowHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+        maxAge: 600,
+      }),
+    );
+  }
+
+  app.use(
+    "*",
+    bodyLimit({
+      maxSize: config.maxRequestBodyBytes,
+      onError: (c) =>
+        c.json(
+          { code: "PayloadTooLarge", message: "Request body exceeds the configured limit" },
+          HttpStatusCodes.PAYLOAD_TOO_LARGE,
+        ),
+    }),
+  );
+}

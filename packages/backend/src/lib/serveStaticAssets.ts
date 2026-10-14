@@ -6,7 +6,7 @@ import { invariant, pages } from "@the_application_name/common";
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 
-const isProduction = process.env["NODE_ENV"] === "production";
+const isProduction = () => process.env["NODE_ENV"] === "production";
 
 export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
   invariant(
@@ -56,7 +56,7 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
     if (ctx.req.path.startsWith("/api")) return next();
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") return next();
 
-    if (isProduction && ctx.req.path.endsWith(".map")) {
+    if (isProduction() && ctx.req.path.endsWith(".map")) {
       return ctx.text("Not Found", 404);
     }
 
