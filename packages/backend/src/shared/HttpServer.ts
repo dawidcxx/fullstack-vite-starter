@@ -10,7 +10,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { TodosApi } from "@/features/todos/TodosApi";
 import { honoJsErrorHandler } from "@/lib/honoJsApiErrorHandler";
 import { Logger } from "@/lib/Logger";
-import { requestObservability, type RequestObservabilityEnv } from "@/lib/requestObservability";
+import { requestObservability } from "@/lib/requestObservability";
 import { serveStaticAssets } from "@/lib/serveStaticAssets";
 import { Config } from "./Config";
 import type { OnDeinit } from "./OnDeinit";
@@ -49,8 +49,8 @@ export class HttpServer implements OnDeinit, OnInit {
   }
 
   private buildRoutes() {
-    const app = new Hono<RequestObservabilityEnv>();
-    const api = new Hono<RequestObservabilityEnv>();
+    const app = new Hono();
+    const api = new Hono();
 
     app.use("*", requestObservability());
     applySecurityMiddlewares(app, this.config);
@@ -71,7 +71,7 @@ export class HttpServer implements OnDeinit, OnInit {
 
 const logger = Logger.for(HttpServer);
 
-function applySecurityMiddlewares(app: Hono<RequestObservabilityEnv>, config: Config) {
+function applySecurityMiddlewares(app: Hono, config: Config) {
   app.use("*", secureHeaders());
 
   if (config.corsOrigins.length > 0) {

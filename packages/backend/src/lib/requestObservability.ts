@@ -7,17 +7,11 @@ import { Logger } from "./Logger";
 
 export const REQUEST_ID_HEADER = "x-request-id";
 
-export type RequestObservabilityEnv = {
-  Variables: {
-    requestId: string;
-  };
-};
-
 const logger = Logger.for("http");
 
 const RequestId = v.pipe(v.string(), v.uuid());
 
-export const requestObservability = (): MiddlewareHandler<RequestObservabilityEnv> => {
+export const requestObservability = (): MiddlewareHandler => {
   return async (c, next) => {
     const requestId = resolveRequestId(c.req.header(REQUEST_ID_HEADER));
     c.set("requestId", requestId);
