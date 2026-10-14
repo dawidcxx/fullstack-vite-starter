@@ -13,7 +13,7 @@ export function useLoading<K extends Key | Key[], TOutput>(
     isLoading: !swr.error && swr.data === undefined,
     isError: Boolean(swr.error),
     reload: () => swr.mutate(undefined, { revalidate: true }),
-    mutate: () => swr.mutate,
+    mutate: swr.mutate,
   };
 }
 
@@ -23,5 +23,4 @@ const SWR_DEFAULT_OPTIONS = {
   revalidateOnReconnect: false,
   revalidateIfStale: false,
   shouldRetryOnError: false,
-  dedupingInterval: Infinity,
 };

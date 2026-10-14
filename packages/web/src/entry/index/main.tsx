@@ -1,8 +1,9 @@
 import "@/global.css";
-import { uuidFromString, type Todo } from "@the_application_name/common";
-import { useEffect, useState, StrictMode } from "react";
+import { uuidFromString } from "@the_application_name/common";
+import { useState, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Route, Router, Switch, useLocation } from "wouter";
+import { useLoading } from "@/hooks/useLoading";
 import { todosApi } from "@/lib/apis";
 
 createRoot(document.getElementById("root")!).render(
@@ -28,27 +29,19 @@ function AppRouter() {
 }
 
 function App({ selectedTodoId }: { selectedTodoId: string | null }) {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const { data, error: fetchError, isLoading, reload } = useLoading("todos", () => todosApi.list());
   const [title, setTitle] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [, navigate] = useLocation();
 
-  useEffect(() => {
-    refreshTodos().catch((err: unknown) => {
-      console.log(err);
-      setError(err instanceof Error ? err.message : "Failed to load todos");
-      setIsLoading(false);
-    });
-  }, []);
-
-  const refreshTodos = async () => {
-    setIsLoading(true);
-    setError(null);
-    const nextTodos = (await todosApi.list()).todos;
-    setTodos(nextTodos);
-    setIsLoading(false);
-  };
+  const todos = data?.todos ?? [];
+  const error =
+    actionError ??
+    (fetchError
+      ? fetchError instanceof Error
+        ? fetchError.message
+        : "Failed to load todos"
+      : null);
 
   const onCreate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -57,22 +50,22 @@ function App({ selectedTodoId }: { selectedTodoId: string | null }) {
     }
 
     try {
-      setError(null);
+      setActionError(null);
       await todosApi.create({ body: { content: title } });
       setTitle("");
-      await refreshTodos();
+      await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create todo");
+      setActionError(err instanceof Error ? err.message : "Failed to create todo");
     }
   };
 
   const onToggle = async (id: string) => {
     try {
-      setError(null);
+      setActionError(null);
       await todosApi.toggle({ params: { id: uuidFromString(id) } });
-      await refreshTodos();
+      await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to toggle todo");
+      setActionError(err instanceof Error ? err.message : "Failed to toggle todo");
     }
   };
 
