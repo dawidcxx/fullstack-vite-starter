@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: nix develop --command bun install --frozen-lockfile
 
+      - name: Build common
+        run: nix develop --command bun run build:common
+
       - name: Check formatting
         run: nix develop --command format-check
 
