@@ -9,6 +9,7 @@ Opinionated template on how to start a Vite + Bun backend project. Optimized for
 - Sub-100MB production Docker image
 - Small package count
 - Workspaces without third-party tool bloat
+- "Multi Page Single Page" Frontend architecture, save on server resources without compromising on page load time
 
 ## How to use
 
