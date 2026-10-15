@@ -12,13 +12,27 @@ Opinionated template on how to start a Vite + Bun backend project. Optimized for
 
 ## How to use
 
+
+### Init
+
 - This is a template repository. Clone it using the "Use this Template" button on GitHub and pull it locally.
-
 - Rename the repo with the included init script `bun run init.js`.
-
 - Afterwards, you can delete the script `rm init.js`.
-
 - (Recommended) Have [nix](https://nixos.org/download/) and [direnv](https://github.com/direnv/direnv) set up.
+
+### Development
+
+- Run background services: `cd docker && docker compose up -d`
+- Install dependencies: `bun install`
+- Run in development mode: `bun run dev`
+
+### Deployment
+
+- On each merge to `main` brach a whole application production image will be published at: `ghcr.io/$username/$repo_name:latest`
+- By default the following env variables take effect:
+  * `PORT` - the http port to bind to, defaults to `8080`
+  * `DATABASE_URL` - a running postgres instance
+  * `CORS_ORIGINS` (optional) - use if your app serves as a API for other webapps
 
 ## Key commands
 
