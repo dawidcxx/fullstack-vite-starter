@@ -32,3 +32,13 @@ When adding new SPAs:
 
 1. Add the URL→HTML mapping to `packages/common/src/consts/pages.ts`
 2. This automatically configures both Vite dev routing and production static asset serving
+
+## Frontend runtime config
+
+All `VITE_*` environment variables are serialized into `window.__APP_CONFIG__` at HTML serve time.
+
+- Development: the `runtime-config-prelude` Vite plugin injects the prelude from `loadEnv`.
+- Production: the backend injects the prelude once at startup, caches the rendered HTML, and serves it without per-request templating.
+- Read values synchronously through `configService` in `packages/web/src/lib/config.ts`.
+- Keys keep their `VITE_` names in the prelude.
+- Never give a secret a `VITE_` prefix; every `VITE_*` value is sent to the browser.

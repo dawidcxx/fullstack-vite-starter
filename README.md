@@ -10,9 +10,9 @@ Opinionated template on how to start a Vite + Bun backend project. Optimized for
 - Small package count
 - Workspaces without third-party tool bloat
 - "Multi Page Single Page" Frontend architecture, save on server resources without compromising on page load time
+- Synchronous runtime config for `VITE_*` variables, no frontend rebuild required
 
 ## How to use
-
 
 ### Init
 
@@ -31,9 +31,10 @@ Opinionated template on how to start a Vite + Bun backend project. Optimized for
 
 - On each merge to `main` brach a whole application production image will be published at: `ghcr.io/$username/$repo_name:latest`
 - By default the following env variables take effect:
-  * `PORT` - the http port to bind to, defaults to `8080`
-  * `DATABASE_URL` - a running postgres instance
-  * `CORS_ORIGINS` (optional) - use if your app serves as a API for other webapps
+  - `PORT` - the http port to bind to, defaults to `8080`
+  - `DATABASE_URL` - a running postgres instance
+  - `CORS_ORIGINS` (optional) - use if your app serves as a API for other webapps
+  - `VITE_*` (optional) - public frontend config injected into the HTML prelude at runtime
 
 ## Key commands
 
@@ -49,3 +50,17 @@ This template uses a monorepo setup with bun workspaces:
 - `packages/backend/`: Bun + Hono.js API server with Drizzle ORM, migrations, and example todos feature
 - `packages/common/`: Shared TypeScript utilities, DTOs, and Valibot schemas for API contracts
 - `packages/web/`: Vite SPA with React, TailwindCSS, and SWR for data fetching
+
+## Runtime config
+
+Any `VITE_*` environment variable is available synchronously in the browser through `configService`:
+
+```ts
+import { configService } from "@/lib/config";
+
+const apiUrl = configService.get("VITE_API_URL");
+```
+
+In development, Vite injects the values into `window.__APP_CONFIG__` while serving HTML. In production, the backend injects them once at startup and caches the rendered pages. Changing a `VITE_*` value only requires restarting the backend, not rebuilding the frontend.
+
+Never use a `VITE_` prefix for secrets: every `VITE_*` value is sent to the browser.

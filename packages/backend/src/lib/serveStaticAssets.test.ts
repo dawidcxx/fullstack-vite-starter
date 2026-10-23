@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { CONFIG_PRELUDE_PLACEHOLDER } from "@the_application_name/common";
 import { Hono } from "hono";
 import { serveStaticAssets } from "@/lib/serveStaticAssets";
 
@@ -22,6 +23,17 @@ describe("serveStaticAssets (built dist)", () => {
     expect(await res.text()).toContain("ROOT_INDEX");
     expect(res.headers.get("content-type")).toBe("text/html");
     expect(res.headers.get("cache-control")).toBe("no-cache");
+  });
+
+  it("injects all VITE_ config into page HTML", async () => {
+    const root = await app.request("/");
+    const rootHtml = await root.text();
+    expect(rootHtml).toContain('"VITE_EXAMPLE":"example-value"');
+    expect(rootHtml).toContain('"VITE_OTHER":"other-value"');
+    expect(rootHtml).not.toContain(CONFIG_PRELUDE_PLACEHOLDER);
+
+    const design = await app.request("/design");
+    expect(await design.text()).toContain('"VITE_EXAMPLE":"example-value"');
   });
 
   it("serves a page SPA directly and its sub-routes via prefix fallback", async () => {
@@ -136,8 +148,8 @@ type BuiltDist = {
 // Mirrors the layout Vite emits: hashed files under `assets/`, non-hashed public
 // files at the root, and one HTML entry per SPA declared in `pages`.
 const BUILT_FILES = {
-  "index.html": "<!doctype html><title>root</title><body>ROOT_INDEX</body>",
-  "design.html": "<!doctype html><title>design</title><body>DESIGN_INDEX</body>",
+  "index.html": `<!doctype html><title>root</title><script>${CONFIG_PRELUDE_PLACEHOLDER}</script><body>ROOT_INDEX</body>`,
+  "design.html": `<!doctype html><title>design</title><script>${CONFIG_PRELUDE_PLACEHOLDER}</script><body>DESIGN_INDEX</body>`,
   "assets/app-abc12345.js": 'console.log("app");',
   "assets/app-abc12345.js.map": '{"version":3}',
   "favicon.svg": '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
@@ -147,7 +159,13 @@ const BUILT_FILES = {
 // so we can prove when the middleware calls `next()`.
 function buildApp(distPath: string): Hono {
   const app = new Hono();
-  app.get("*", serveStaticAssets(distPath));
+  app.get(
+    "*",
+    serveStaticAssets(distPath, {
+      VITE_EXAMPLE: "example-value",
+      VITE_OTHER: "other-value",
+    }),
+  );
   app.get("*", (c) => c.text("NEXT"));
   return app;
 }

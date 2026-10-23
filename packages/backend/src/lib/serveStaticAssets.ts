@@ -1,14 +1,23 @@
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
-import { invariant, pages } from "@the_application_name/common";
+import {
+  CONFIG_PRELUDE_PLACEHOLDER,
+  invariant,
+  pages,
+  serializeConfigPrelude,
+  type RuntimeConfig,
+} from "@the_application_name/common";
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 
 const isProduction = () => process.env["NODE_ENV"] === "production";
 
-export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
+export const serveStaticAssets = (
+  absoluteStaticAssetsPath: string,
+  runtimeConfig: RuntimeConfig,
+) => {
   invariant(
     isAbsolute(absoluteStaticAssetsPath),
     "serveStaticAssets: absoluteStaticAssetsPath must be an absolute path",
@@ -52,6 +61,13 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
       ([route, htmlFileName]) => [route, resolve(absoluteStaticAssetsPath, htmlFileName)] as const,
     );
 
+  const pageCache = new Map<string, CachedFile>();
+  for (const [, htmlFileName] of pageEntries) {
+    const htmlFilePath = resolve(absoluteStaticAssetsPath, htmlFileName);
+    const cached = renderHtmlFile(htmlFilePath, runtimeConfig);
+    if (cached) pageCache.set(htmlFilePath, cached);
+  }
+
   return createMiddleware(async (ctx, next) => {
     if (ctx.req.path.startsWith("/api")) return next();
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") return next();
@@ -64,12 +80,12 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
       assetLookupMap.get(ctx.req.path) ?? assetLookupMap.get(normalizeRoutePath(ctx.req.path));
 
     if (filePath) {
-      return serveFile(ctx, filePath, absoluteStaticAssetsPath);
+      return serveFile(ctx, filePath, absoluteStaticAssetsPath, pageCache.get(filePath));
     }
 
     for (const [prefix, htmlPath] of pagePrefixEntries) {
       if (ctx.req.path.startsWith(`${prefix}/`)) {
-        return serveFile(ctx, htmlPath, absoluteStaticAssetsPath);
+        return serveFile(ctx, htmlPath, absoluteStaticAssetsPath, pageCache.get(htmlPath));
       }
     }
 
@@ -81,7 +97,7 @@ export const serveStaticAssets = (absoluteStaticAssetsPath: string) => {
       return ctx.text("Not Found", 404);
     }
 
-    return serveFile(ctx, indexHtmlPath, absoluteStaticAssetsPath);
+    return serveFile(ctx, indexHtmlPath, absoluteStaticAssetsPath, pageCache.get(indexHtmlPath));
   });
 };
 
@@ -109,14 +125,42 @@ type CachedFile = {
   etag: string;
 };
 
+function renderHtmlFile(filePath: string, runtimeConfig: RuntimeConfig): CachedFile | null {
+  let template: string;
+  try {
+    template = readFileSync(filePath, "utf8");
+  } catch {
+    return null;
+  }
+
+  const html = template.replaceAll(
+    CONFIG_PRELUDE_PLACEHOLDER,
+    serializeConfigPrelude(runtimeConfig),
+  );
+
+  return createCachedFile(new TextEncoder().encode(html));
+}
+
+function createCachedFile(content: Uint8Array): CachedFile {
+  return {
+    content,
+    etag: `"${createHash("sha1").update(content).digest("base64url")}"`,
+  };
+}
+
 const fileCache = new Map<string, CachedFile>();
 
-async function serveFile(ctx: Context, filePath: string, root: string): Promise<Response> {
+async function serveFile(
+  ctx: Context,
+  filePath: string,
+  root: string,
+  preloaded?: CachedFile,
+): Promise<Response> {
   if (!isUnderRoot(filePath, root)) {
     return new Response("Not Found", { status: 404 });
   }
 
-  let cached = fileCache.get(filePath);
+  let cached = preloaded ?? fileCache.get(filePath);
   if (!cached) {
     let content: Uint8Array;
     try {
@@ -124,10 +168,7 @@ async function serveFile(ctx: Context, filePath: string, root: string): Promise<
     } catch {
       return new Response("Not Found", { status: 404 });
     }
-    cached = {
-      content,
-      etag: `"${createHash("sha1").update(content).digest("base64url")}"`,
-    };
+    cached = createCachedFile(content);
     fileCache.set(filePath, cached);
   }
 

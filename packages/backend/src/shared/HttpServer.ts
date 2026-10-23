@@ -2,7 +2,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { inject, injectable } from "@needle-di/core";
-import { HttpStatusCodes, invariant } from "@the_application_name/common";
+import { HttpStatusCodes, invariant, pickViteConfig } from "@the_application_name/common";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
@@ -61,7 +61,7 @@ export class HttpServer implements OnDeinit, OnInit {
 
     api.route("/", this.todosApi.build());
     app.route("/api", api);
-    app.get("*", serveStaticAssets(frontendDistPath));
+    app.get("*", serveStaticAssets(frontendDistPath, pickViteConfig(process.env)));
 
     logger.info("Registered API routes", { routes: app.routes.map((it) => [it.method, it.path]) });
 
